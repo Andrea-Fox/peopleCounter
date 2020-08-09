@@ -41,6 +41,9 @@ static int center[2] = {239,175}; /* center of the two zones */
 static int Zone = 0;
 static int PplCounter = 0;
 
+static int ROI_height = 5;
+static int ROI_width = 5;
+
 void setup_wifi() 
 {
   WiFi.begin(ssid, password);
@@ -160,7 +163,7 @@ void loop(void)
   }
   
   
-  distanceSensor.setROI(5, 5, center[Zone]);  // first value: height of the zone, second value: width of the zone
+  distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
   delay(50);
   distanceSensor.setTimingBudgetInMs(50);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
