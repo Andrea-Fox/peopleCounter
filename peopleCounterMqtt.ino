@@ -3,12 +3,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "FRITZ!Box 7590 VE";     //wi-fi netwrok name
-const char* password = "74921096316589250435";  //wi-fi network password
-const char* mqtt_server = "192.168.178.30";   // mqtt broker ip address (without port)
-const int mqtt_port = 1883;                   // mqtt broker port
-const char *mqtt_user = "mqttUser";
-const char *mqtt_pass = "mqttPassword";
+const char* ssid = "YOUR-WIFI-NETWORK";     //wi-fi netwrok name
+const char* password = "YOUR WIFI PASSWORD";  //wi-fi network password
+const char* mqtt_server = "YOUR-MQTT-BROKER-ADDRESS";   // mqtt broker ip address (without port)
+const int mqtt_port = MQTT-BROKER-PORT;                   // mqtt broker port 
+const char *mqtt_user = "MQTT-USERNAME";
+const char *mqtt_pass = "MQTT-PASSWORD";
 #define mqtt_serial_publish_ch "sensoreCorridoioSoggiorno/serialdata/tx"
 #define mqtt_serial_receiver_ch "sensoreCorridoioSoggiorno/serialdata/rx"
 
@@ -29,7 +29,7 @@ static int SOMEONE = 1;
 static int LEFT = 0;
 static int RIGHT = 1;
 
-static int DIST_THRESHOLD_MAX[] = {1850, 1650};
+static int DIST_THRESHOLD_MAX[] = {1850, 1650};   // treshold of the two zones
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
@@ -37,9 +37,7 @@ static int LeftPreviousStatus = NOBODY;
 static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
-static int center[2] = {239,175}; /* these are the spad center of the 2 8*16 zones */  //239, 175
-// 175: quasi sempre sopra i due metri, mai sotto i 1800
-// 239: quasi sempre tra i 1500 e i 2000
+static int center[2] = {239,175}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
 
@@ -97,21 +95,21 @@ void callback(char* topic, byte *payload, unsigned int length) {
       if (newPayload == "reset")
       {
         PeopleCount = 0;
-        Serial.print("Il numero di persone è stato azzerato. Persone attualmente nella stanza: ");
+        Serial.print("The number of people in the room has been resetted. People in the room now: ");
         Serial.print(PeopleCount);
         publishSerialData(PeopleCount);
       }
       if (newPayload == "increase")
       {
         PeopleCount = PeopleCount +1;
-        Serial.print("Il numero di persone è stato aumentato di 1. Persone attualmente nella stanza: ");
+        Serial.print("The number of people in the room has been increased. People in the room now: ");
         Serial.print(PeopleCount);
         publishSerialData(PeopleCount);
       }
       if (newPayload == "decrease")
       {
         PeopleCount = PeopleCount-1;
-        Serial.print("Il numero di persone è stato diminuito di 1. Persone attualmente nella stanza: ");
+        Serial.print("The number of people in the room has been decreased. People in the room now: ");
         Serial.print(PeopleCount);
         publishSerialData(PeopleCount);
       }
@@ -162,7 +160,7 @@ void loop(void)
   }
   
   
-  distanceSensor.setROI(5, 5, center[Zone]);  // primo: altezza, secondo: larghezza
+  distanceSensor.setROI(5, 5, center[Zone]);  // first value: height of the zone, second value: width of the zone
   delay(50);
   distanceSensor.setTimingBudgetInMs(50);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
@@ -181,7 +179,6 @@ void loop(void)
 }
 
 // NOBODY = 0, SOMEONE = 1, LEFT = 0, RIGHT = 1
-// contatore zona sinistra: 1, contatore zona destra: 10
 
 int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
 
@@ -249,13 +246,13 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
           // This an entry
           PeopleCount ++;
-          Serial.print("Una persona è entrata. Persone attualmente nella stanza: ");
+          Serial.print("One person has entered in the room. People in the room now: ");
           Serial.print(PeopleCount);
           publishSerialData(PeopleCount);
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
           PeopleCount --;
-          Serial.print("Una persona è uscita. Persone attualmente nella stanza: ");
+          Serial.print("One person has exited the room. People in the room now: ");
           Serial.print(PeopleCount);  
           publishSerialData(PeopleCount);
           }
