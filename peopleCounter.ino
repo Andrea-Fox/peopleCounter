@@ -9,8 +9,8 @@ const char* mqtt_server = "YOUR-MQTT-BROKER-ADDRESS";   // mqtt broker ip addres
 const int mqtt_port = MQTT-BROKER-PORT;                   // mqtt broker port 
 const char *mqtt_user = "MQTT-USERNAME";
 const char *mqtt_pass = "MQTT-PASSWORD";
-#define mqtt_serial_publish_ch "sensoreCorridoioSoggiorno/serialdata/tx"
-#define mqtt_serial_receiver_ch "sensoreCorridoioSoggiorno/serialdata/rx"
+#define mqtt_serial_publish_ch "peopleCounter/serialdata/tx"
+#define mqtt_serial_receiver_ch "peopleCounter/serialdata/rx"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
