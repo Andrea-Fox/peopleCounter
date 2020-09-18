@@ -70,8 +70,6 @@ One might also edit the name of the device in the MQTT network: this can be easi
 
 ### Relevant area
 
-BREVE SPIEGAZIONE DI COME FA LE MISURE E COSA SONO LE ROI
-
 In order to find the correct distance, the sensor creates a 16x16 grid and the final distance is computed by taking the average of the distance of the values of the grid; to perform our task, one has to create two zones, by defining two different Region of Interest (ROI) inside this grid. Then the sensor will measure the two distances in the two zones and will detect any presence. 
 
 However, the algorithm is very sensitive to the slightest modification of the ROI, regarding both its size and its positioning inside the grid.
