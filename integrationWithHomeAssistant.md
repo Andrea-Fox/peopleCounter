@@ -12,7 +12,7 @@ Inside *configuration.yaml*, we need to add the following code:
 
 ```yaml
 sensor:
-	- platform: mqtt
+    - platform: mqtt
       name: "People counter"
       state_topic: "peopleCounter/serialdata/tx"
 ```
