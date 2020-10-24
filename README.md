@@ -134,5 +134,5 @@ To invert the two zones, one might simply invert the values in the `center` vect
 
 
 ## New release
-The new version allows OTA updates through the Arduino IDE.
+The new version allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
 
