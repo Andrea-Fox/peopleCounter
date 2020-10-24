@@ -132,3 +132,7 @@ To invert the two zones, one might simply invert the values in the `center` vect
 
 [MQTT with ESP32 tutorial](https://iotdesignpro.com/projects/how-to-connect-esp32-mqtt-broker)
 
+
+## New release
+The new version allows OTA updates through the Arduino IDE.
+
