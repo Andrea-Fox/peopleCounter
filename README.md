@@ -66,7 +66,7 @@ Clearly, to use the MQTT functionalities one has to use a board which supports W
 
 In order to connect to the WiFi, one has to specify the name of the WiFi network, its password, the MQTT broker address and ots port, the MQTT username and the corresponding password. All this values have to inserted at the beginning of the code, in the corresponding lines.
 
-One might also edit the name of the device in the MQTT network: this can be easily done just by editing `mqtt_serial_publish_ch` and `mqtt_serial_receiver_ch`. The first one corresponds to the address used when publishing messages, while the second one corresponds to the address for messages sent to the board connected to the sensor. 
+One might also edit the name of the device in the MQTT network: this can be easily done just by editing `mqtt_serial_publish_ch` and `mqtt_serial_receiver_ch`. The first one corresponds to the address used when publishing messages, while the second one corresponds to the address for messages sent to the board connected to the sensor.   
 **Important:** one also has to specify the informations about the MQTT server, otherwise (using an ESP32) it will be impossible to connect to the WiFi, as noted in [#3](https://github.com/Andrea-Fox/peopleCounter/issues/3)
 
 ### Relevant area
