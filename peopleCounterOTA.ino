@@ -89,14 +89,6 @@ void reconnect() {
   }
 }
 
-
-void publishSerialLedStatus(char *serialData){
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.publish(mqtt_serial_publish_ch_light, serialData);
-}
-
 void publishSerialData(int serialData){
   //serialData = max(0, serialData);
   if (!client.connected()) {
@@ -193,7 +185,6 @@ void setup(void)
   Serial.setTimeout(500);// Set time out for setup_wifi();
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
   delay(1000);
   publishSerialData(0);
   reconnect();  
