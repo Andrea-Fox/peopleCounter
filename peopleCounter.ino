@@ -10,7 +10,6 @@ const int mqtt_port = MQTT-BROKER-PORT;                   // mqtt broker port
 const char *mqtt_user = "MQTT-USERNAME";
 const char *mqtt_pass = "MQTT-PASSWORD";
 #define mqtt_serial_publish_ch "peopleCounter/serialdata/tx"
-#define mqtt_serial_receiver_ch "peopleCounter/serialdata/rx"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -79,45 +78,6 @@ void reconnect() {
   }
 }
 
-void callback(char* topic, byte *payload, unsigned int length) {
-    Serial.println("-------new message from broker-----");
-    Serial.print("channel:");
-    Serial.println(topic);
-    Serial.print("data:");  
-    Serial.write(payload, length);
-    Serial.println();
-    String newTopic = topic;
-    payload[length] = '\0';
-    String newPayload = String((char *)payload);
-    if (newTopic == mqtt_serial_receiver_ch) 
-    {
-      if (newPayload == "announce")
-      {
-        publishSerialData(PeopleCount);
-      }
-      if (newPayload == "reset")
-      {
-        PeopleCount = 0;
-        Serial.print("The number of people in the room has been resetted. People in the room now: ");
-        Serial.print(PeopleCount);
-        publishSerialData(PeopleCount);
-      }
-      if (newPayload == "increase")
-      {
-        PeopleCount = PeopleCount +1;
-        Serial.print("The number of people in the room has been increased. People in the room now: ");
-        Serial.print(PeopleCount);
-        publishSerialData(PeopleCount);
-      }
-      if (newPayload == "decrease")
-      {
-        PeopleCount = PeopleCount-1;
-        Serial.print("The number of people in the room has been decreased. People in the room now: ");
-        Serial.print(PeopleCount);
-        publishSerialData(PeopleCount);
-      }
-    }
-}
 
 void publishSerialData(int serialData){
   serialData = max(0, serialData);
@@ -144,7 +104,6 @@ void setup(void)
   Serial.setTimeout(500);// Set time out for setup_wifi();
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
   delay(1000);
   publishSerialData(0);
   reconnect();  
