@@ -40,12 +40,10 @@ static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
 static int LeftPreviousStatus = NOBODY;
 static int RightPreviousStatus = NOBODY;
-static int PeopleCount = 0;
-//195,60
-//167, 231
-static int center[2] = {167, 231}; // {21, 85}; these are the spad center of the 2 8*16 zones */  //239, 175, bassi: 35, 99
-// 175: quasi sempre sopra i due metri, mai sotto i 1800
-// 239: quasi sempre tra i 1500 e i 2000
+
+
+static int center[2] = {167, 231}; 
+
 static int Zone = 0;
 static int PplCounter = 0;
 
@@ -219,7 +217,7 @@ void loop(void)
     
   
      // inject the new ranged distance in the people counting algorithm
-    PplCounter = ProcessPeopleCountingData(distance, Zone);
+    processPeopleCountingData(distance, Zone);
   
     Zone++;
     Zone = Zone%2;
@@ -229,9 +227,8 @@ void loop(void)
 }
 
 // NOBODY = 0, SOMEONE = 1, LEFT = 0, RIGHT = 1
-// contatore zona sinistra: 1, contatore zona destra: 10
 
-int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
+void processPeopleCountingData(int16_t Distance, uint8_t zone) {
 
     int CurrentZoneStatus = NOBODY;
     int AllZonesCurrentStatus = 0;
@@ -296,15 +293,9 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
         Serial.println();
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
           // This an entry
-          PeopleCount ++;
-          Serial.print("Una persona è entrata. Persone attualmente nella stanza: ");
-          Serial.print(PeopleCount);
-          publishSerialData(1);   // 1 è il segnale che rappresenta che una persona è entrata
+          publishSerialData(1);   // 1 is the signal that repsresents that someone has gone inside the room
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
-          PeopleCount --;
-          Serial.print("Una persona è uscita. Persone attualmente nella stanza: ");
-          Serial.print(PeopleCount);  // 2 è il segnale che segna che una persona è uscita
           publishSerialData(2);
           }
       }
@@ -324,8 +315,5 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
       // 0 1 3 2 ==> if next is 0 : check if exit
       PathTrack[PathTrackFillingSize-1] = AllZonesCurrentStatus;
     }
-  }
-
-  // output debug data to main host machine
-  return(PeopleCount);     
+  } 
 }
