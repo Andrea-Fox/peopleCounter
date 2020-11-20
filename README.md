@@ -1,6 +1,6 @@
 # MQTT People counter
 
-This repository contains a program (to be flashed, for example on an ESP32, using the Arduino IDE) which allows to create a sensor capable of counting the people inside a room. It works using the VL53L1X sensor by ST Microelectronics. The number of people inside the room will then be shared using the MQTT protocol.
+This repository contains a program (to be flashed, for example on an ESP32, using the Arduino IDE) which allows to create a sensor capable of detecting people going in and out of a room. It works using the VL53L1X sensor by ST Microelectronics. The passage detection is then shared through the MQTT protocol and the count of the people in the room is done directly on other platform such as Home Assistant (see the dedicated file for a smooth integration in Home Assistant).
 
 ## Idea behind the algorithm
 
