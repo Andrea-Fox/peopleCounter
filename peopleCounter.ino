@@ -34,7 +34,6 @@ static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
 static int LeftPreviousStatus = NOBODY;
 static int RightPreviousStatus = NOBODY;
-static int PeopleCount = 0;
 
 static int center[2] = {239,175}; /* center of the two zones */  
 static int Zone = 0;
@@ -65,9 +64,6 @@ void reconnect() {
     if (client.connect(clientId.c_str(),mqtt_user,mqtt_pass)) {
       Serial.println("connected");
       //Once connected, publish an announcement...
-      publishSerialData(PeopleCount);
-      // ... and resubscribe
-      client.subscribe(mqtt_serial_receiver_ch);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -132,7 +128,7 @@ void loop(void)
   Serial.println(distance);
 
    // inject the new ranged distance in the people counting algorithm
-  PplCounter = ProcessPeopleCountingData(distance, Zone);
+  processPeopleCountingData(distance, Zone);
 
   Zone++;
   Zone = Zone%2;
@@ -142,7 +138,7 @@ void loop(void)
 
 // NOBODY = 0, SOMEONE = 1, LEFT = 0, RIGHT = 1
 
-int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
+void processPeopleCountingData(int16_t Distance, uint8_t zone) {
 
     int CurrentZoneStatus = NOBODY;
     int AllZonesCurrentStatus = 0;
@@ -206,17 +202,11 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
         // check exit or entry. no need to check PathTrack[0] == 0 , it is always the case
         Serial.println();
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
-          // This an entry
-          PeopleCount ++;
-          Serial.print("One person has entered in the room. People in the room now: ");
-          Serial.print(PeopleCount);
-          publishSerialData(PeopleCount);
+          // this is an entry
+          publishSerialData(1);
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
-          PeopleCount --;
-          Serial.print("One person has exited the room. People in the room now: ");
-          Serial.print(PeopleCount);  
-          publishSerialData(PeopleCount);
+          publishSerialData(2);
           }
       }
       for (int i=0; i<4; i++){
@@ -236,7 +226,4 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
       PathTrack[PathTrackFillingSize-1] = AllZonesCurrentStatus;
     }
   }
-
-  // output debug data to main host machine
-  return(PeopleCount);     
 }
