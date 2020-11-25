@@ -52,8 +52,8 @@ Clearly, to use the MQTT functionalities one has to use a board which supports W
 ```
                     ESP32   VL53L1X board
 -------------------------   -------------
-    				          VIN - VIN
-    				          GND - GND
+    				  VIN - VIN
+    				  GND - GND
      SDA (pin 42, GPIO21) - SDA
      SCL (pin 39, GPIO22) - SCL
 ```
