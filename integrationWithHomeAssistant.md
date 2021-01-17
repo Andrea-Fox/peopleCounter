@@ -15,6 +15,7 @@ sensor:
     - platform: mqtt
       name: "People counter"
       state_topic: "peopleCounter/serialdata/tx"
+      force_update: true
 ```
 
 The state topic must contain whatever is saved as `define_mqtt_serial_publish_ch` in the file `peopleCounter.ino`.
