@@ -84,6 +84,11 @@ void publishSerialData(int serialData){
   String stringaCounter = String(serialData);
   stringaCounter.toCharArray(peopleCounterArray, stringaCounter.length() +1);
   client.publish(mqtt_serial_publish_ch, peopleCounterArray);
+  delay(50);
+  serialData = 0;
+  stringaCounter = String(serialData);
+  stringaCounter.toCharArray(peopleCounterArray, stringaCounter.length() +1);
+  client.publish(mqtt_serial_publish_ch, peopleCounterArray);
 }
 
 void publishSerialDataDistanza(int serialData){
