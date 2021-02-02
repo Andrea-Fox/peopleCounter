@@ -143,6 +143,10 @@ To invert the two zones, one might simply invert the values in the `center` vect
 [MQTT with ESP32 tutorial](https://iotdesignpro.com/projects/how-to-connect-esp32-mqtt-broker)
 
 
-## New release
-The new version allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
+## OTA updates
+The updated file allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
+
+
+## Case for the sensor
+I'm looking for someone with some 3d modelling experience in order to create a case for this sensor. 
 
