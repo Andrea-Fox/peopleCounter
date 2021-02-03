@@ -89,12 +89,7 @@ In the original code, developed by ST Microelectronics, the values for the param
 - `ROI_width = 8`
 - `ROI_height = 16`
 - `center = {167,231}`
-
-Differently to the the above mentioned program that inspired my code, I positioned the sensor on the side of the door and not above it. In my case, the parameters are very different:
-
-- `ROI_width = 5`
-- `ROI_height = 5`
-- `center = {239, 175}`
+however, I've noticed better performances with the values suggested in the code above.
 
 Be careful that both `ROI_width` and `ROI_heigth` have to be at least 4. The center of the ROI you set is based on the table below and the optical center has to be set as the pad above and to the right of your exact center:
 
