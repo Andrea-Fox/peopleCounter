@@ -10,34 +10,36 @@ In order to integrate this sensor inside your Home Assistant setup, the followin
 We now need to define two automations that will allow us to understand when someone is getting in or out of the room. This first one will take account of the first case.
 
 ```yaml
-alias: 'Person entering the room'
-trigger:
-    - platform: mqtt
-      topic: "peopleCounter/serialdata/tx"
-      payload: '1'
-action:
-    - data: {}
-      entity_id: input_number.people_in_the_room
-      service: input_number.increment
-mode: single
+- alias: 'Person entering the room'
+  description: ''
+  id: 'person_entering_the_room' # unique id here
+  trigger:
+     - platform: mqtt
+       topic: "peopleCounter/serialdata/tx"
+       payload: '1'
+  action:
+     - service: input_number.increment
+       data: 
+            entity_id: input_number.people_in_the_room
+  mode: single
 
 ```
 
 The following automation will take account of the case of someone exiting the room:
 
 ```yaml
-alias: 'Person exiting the room'
-description: ''
-trigger:
-- platform: mqtt
-  topic: "peopleCounter/serialdata/tx"
-  payload: '2'
-condition: []
-action:
-- data: {}
-  entity_id: input_number.people_in_the_room
-  service: input_number.decrement
-mode: single
+- alias: 'Person exiting the room'
+  description: ''
+  id: 'person_exiting_the_room' # unique id here
+  trigger:
+     - platform: mqtt
+       topic: "peopleCounter/serialdata/tx"
+       payload: '2'
+  action:
+     - service: input_number.decrement
+       data: 
+            entity_id: input_number.people_in_the_room
+  mode: single
 
 ```
 
@@ -46,33 +48,33 @@ mode: single
 Finally, this automation will turn on a light when there is at least one person in the room:
 
 ```yaml
-alias: 'Turn on the light'
-trigger:
-- entity_id: input_number.people_in_the_room
-  above: '0'
-  platform: numeric_state
-action:
-- data: {}
-  entity_id: switch.light_in_the_room
-  service: switch.turn_on
-mode: single
+- alias: 'Turn on the light'
+  description: ''
+  id: 'turn_on_the_light' # unique id here
+  trigger:
+    - entity_id: input_number.people_in_the_room
+      above: '0'
+      platform: numeric_state
+  action:
+    - service: switch.turn_on
+      entity_id: switch.light_in_the_room
+  mode: single
 ```
 
 and this one turns the light off when the last person gets out of the room:
 
 ```yaml
-alias: 'Turn the light off'
-description: ''
-trigger:
-- entity_id: input_number.people_in_the_room
-  below: '1'
-  platform: numeric_state
-condition: []
-action:
-- data: {}
-  entity_id: switch.light_in_the_room
-  service: switch.turn_off
-mode: single
+- alias: 'Turn on the light'
+  description: ''
+  id: 'turn_on_the_light' # unique id here
+  trigger:
+    - entity_id: input_number.people_in_the_room
+      below: '1'
+      platform: numeric_state
+  action:
+    - service: switch.turn_off
+      entity_id: switch.light_in_the_room
+  mode: single
 
 ```
 
