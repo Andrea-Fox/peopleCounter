@@ -2,7 +2,7 @@
 
 In order to integrate this sensor inside your Home Assistant setup, the following chunks of code need to be added to the appropriate files.
 
-**We will have to define an counter**, that simply will count the number of people inside the room. It will be called `counter.people_in_the_room`
+**We will have to define a counter**, that simply will count the number of people inside the room. It will be called `counter.people_in_the_room`
 
 
 #### automations.yaml
