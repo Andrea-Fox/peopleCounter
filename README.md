@@ -57,6 +57,7 @@ Clearly, to use the MQTT functionalities one has to use a board which supports W
      SDA (pin 42, GPIO21) - SDA
      SCL (pin 39, GPIO22) - SCL
 ```
+The sensors from Pololu and Adafruit can also be connected to the 5v pin (VIN)
 #### ESP8266
 It is also possible to use an ESP8266, using, for example, the following connections: (in that case, use the code specific for this board)
 ```
