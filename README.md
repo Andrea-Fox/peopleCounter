@@ -124,6 +124,8 @@ Another crucial choice is the one corresponding to the threshold. Indeed a movem
 
 The SparkFun library also supports more formats for the threshold: for example one can set that a movement is detected whenever the distance is between two values. However, more information for the interested reader can be found on the corresponding page.
 
+*My suggestion is to observe the average distance measured from the sensor in each area and then use as threshold a value to 80% of the average distance*
+
 ### How to invert the two zones
 
 To invert the two zones, one might simply invert the values in the `center` vector.
