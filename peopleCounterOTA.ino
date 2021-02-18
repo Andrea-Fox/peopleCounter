@@ -14,7 +14,7 @@ const char *mqtt_user = "";
 const char *mqtt_pass = "";
 #define mqtt_serial_publish_ch "peopleCounter/serialdata/tx"
 #define mqtt_serial_publish_distance_ch "peopleCounterDistance/serialdata/tx"
-#define mqtt_serial_receiver_ch "peopleCounter/serialdata/rx"
+#define mqtt_serial_receiver_ch "peopleCounterReceiver/serialdata/rx"
 
 
 WiFiClient espClient;
@@ -34,7 +34,7 @@ static int SOMEONE = 1;
 static int LEFT = 0;
 static int RIGHT = 1;
 
-static int DIST_THRESHOLD_MAX[] = {2000, 2000};
+static int DIST_THRESHOLD_MAX[] = {0, 0};
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
@@ -51,6 +51,59 @@ unsigned long previousMillis = 0;  // will store last time LED was updated
 const long interval = 50;  // interval at which to blink (milliseconds)
 
 
+void define_threshold(){
+  // the sensor does 100 measurements for each zone (zones are predefined)
+  // each measurements is done with a timing budget of 100 ms, to increase the precision
+  client.publish(mqtt_serial_publish_distance_ch, "Computation of new threshold");
+  delay(500);
+  Zone = 0;
+  float sum_zone_0 = 0;
+  float sum_zone_1 = 0;
+  uint16_t distance;
+  for (int i=0; i<100; i++){
+      // increase sum of values in Zone 0
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_0 = sum_zone_0 + distance;
+      publishDistance(distance, 0);
+      Zone++;
+      Zone = Zone%2;
+
+      // increase sum of values in Zone 1
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_1 = sum_zone_1 + distance;
+      publishDistance(distance, 1);
+      Zone++;
+      Zone = Zone%2;
+  }
+  // after we have computed the sum for each zone, we can compute the average distance of each zone
+  float average_zone_0 = sum_zone_0 / 100;
+  float average_zone_1 = sum_zone_1 / 100;
+  client.publish(mqtt_serial_publish_distance_ch, "average distance");
+  publishDistance(average_zone_0, 0);   
+  publishDistance(average_zone_1, 1);
+
+  float threshold_zone_0 = average_zone_0 * 80/100; // they can be int values, as we are not interested in the decimal part when defining the threshold
+  float threshold_zone_1 = average_zone_1 * 80/100;
+  
+
+  DIST_THRESHOLD_MAX[0] = threshold_zone_0;
+  DIST_THRESHOLD_MAX[1] = threshold_zone_1;
+  client.publish(mqtt_serial_publish_distance_ch, "new threshold defined");
+  publishDistance(threshold_zone_0, 0);   
+  publishDistance(threshold_zone_1, 1);
+  delay(2000);
+}
+
 void setup_wifi() 
 {
   WiFi.begin(ssid, password);
@@ -60,6 +113,25 @@ void setup_wifi()
     Serial.print(".");
     WiFi.begin(ssid, password);
   }
+}
+
+void callback(char* topic, byte *payload, unsigned int length) {
+    Serial.println("-------new message from broker-----");
+    Serial.print("channel:");
+    Serial.println(topic);
+    Serial.print("data:");  
+    Serial.write(payload, length);
+    Serial.println();
+    String newTopic = topic;
+    payload[length] = '\0';
+    String newPayload = String((char *)payload);
+    if (newTopic == mqtt_serial_receiver_ch) 
+    {
+      if (newPayload == "new_threshold")
+      {
+        define_threshold();
+      }
+    }
 }
 
 void reconnect() {
@@ -87,7 +159,7 @@ void reconnect() {
   }
 }
 
-void publishSerialData(int serialData){
+void publishPersonPassage(int serialData){
   //serialData = max(0, serialData);
   if (!client.connected()) {
     reconnect();
@@ -98,7 +170,7 @@ void publishSerialData(int serialData){
 }
 
 
-void publishSerialDataDistanza(int serialData){
+void publishDistance(int serialData){
   //serialData = max(0, serialData);
   if (!client.connected()) {
     reconnect();
@@ -178,10 +250,12 @@ void setup(void)
   Serial.setTimeout(500);// Set time out for setup_wifi();
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
   delay(1000);
   publishSerialData(0);
   reconnect();  
-  
+  delay(500);
+  define_threshold();
 }
 
 
