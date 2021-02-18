@@ -50,6 +50,9 @@ static int PplCounter = 0;
 unsigned long previousMillis = 0;  // will store last time LED was updated
 const long interval = 50;  // interval at which to blink (milliseconds)
 
+static int ROI_height = 4; // 5
+static int ROI_width = 4;  // 5
+
 
 void define_threshold(){
   // the sensor does 100 measurements for each zone (zones are predefined)
