@@ -19,8 +19,6 @@ PubSubClient client(espClient);
 
 char peopleCounterArray[50];
 
-static int ROI_height = 4; // 5
-static int ROI_width = 4;  // 5
 
 //Optional interrupt and shutdown pins.  Vanno cambiati e messi quelli che hanno i collegamenti i^2C
 #define SHUTDOWN_PIN 2    
@@ -56,7 +54,8 @@ void define_threshold(){
   float sum_zone_0 = 0;
   float sum_zone_1 = 0;
   uint16_t distance;
-  for (int i=0; i<100; i++){
+  int number_attempts = 100;
+  for (int i=0; i<number_attempts; i++){
       // increase sum of values in Zone 0
       distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
       delay(50);
@@ -82,8 +81,8 @@ void define_threshold(){
       Zone = Zone%2;
   }
   // after we have computed the sum for each zone, we can compute the average distance of each zone
-  float average_zone_0 = sum_zone_0 / 100;
-  float average_zone_1 = sum_zone_1 / 100;
+  float average_zone_0 = sum_zone_0 / number_attempts;
+  float average_zone_1 = sum_zone_1 / number_attempts;
   client.publish(mqtt_serial_publish_distance_ch, "average distance");
   publishDistance(average_zone_0, 0);   
   publishDistance(average_zone_1, 1);
