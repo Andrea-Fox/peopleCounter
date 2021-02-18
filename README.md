@@ -124,7 +124,9 @@ Another crucial choice is the one corresponding to the threshold. Indeed a movem
 
 The SparkFun library also supports more formats for the threshold: for example one can set that a movement is detected whenever the distance is between two values. However, more information for the interested reader can be found on the corresponding page.
 
-*My suggestion is to observe the average distance measured from the sensor in each area and then use as threshold a value to 80% of the average distance*
+With the updated code (however only for esp32 at the moment) the threshold is automatically calculated by the sensor. To do so it is necessary to position the sensor and, after turning it on, wait for 10 seconds without passing under it. After this time, the average of the measures for each zone will be computed and the thereshold for each ROI will correspond to 80% of the average value.
+
+The calibration of the threshold can also be triggered by a MQTT message. An example for doing so is in the file  `integration_with_home_assistant.md`.
 
 ### How to invert the two zones
 
@@ -149,7 +151,7 @@ The updated file allows OTA updates through the Arduino IDE. For more informatio
 I'm looking for someone with some 3d modelling experience in order to create a case for this sensor. 
 
 ## ToDo list
-- [ ] adding ability to understand autonomously which is the optimal threshold for each ROI
+- [x] adding ability to understand autonomously which is the optimal threshold for each ROI
 - [ ] adding ability to understand autonomously which are the optimal ROIs (if anyone has any suggestions on how to achieve this result let me know, because I have no idea how to solve this issue)
 
 ## Discord server
