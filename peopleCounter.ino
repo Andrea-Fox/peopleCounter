@@ -151,7 +151,7 @@ void reconnect() {
 }
 
 
-void publishSerialData(int serialData){
+void publishPersonPassage(int serialData){
   serialData = max(0, serialData);
   if (!client.connected()) {
     reconnect();
@@ -214,6 +214,7 @@ void loop(void)
   distanceSensor.stopRanging();
 
   Serial.println(distance);
+  publishDistance(distance, Zone)
 
    // inject the new ranged distance in the people counting algorithm
   processPeopleCountingData(distance, Zone);
@@ -291,10 +292,10 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
         Serial.println();
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
           // this is an entry
-          publishSerialData(1);
+          publishPersonPassage(1);
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
-          publishSerialData(2);
+          publishPersonPassage(2);
           }
       }
       for (int i=0; i<4; i++){
