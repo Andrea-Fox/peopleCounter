@@ -278,7 +278,7 @@ void loop(void)
     }
     
     
-    distanceSensor.setROI(8, 8, center[Zone]);  // primo: altezza, secondo: larghezza
+    distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // primo: altezza, secondo: larghezza
     
     distanceSensor.setTimingBudgetInMs(50);
     distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
