@@ -252,7 +252,7 @@ void setup(void)
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   delay(1000);
-  publishSerialData(0);
+  publishPersonPassage(0);
   reconnect();  
   delay(500);
   define_threshold();
@@ -362,10 +362,10 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
         Serial.println();
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
           // This an entry
-          publishSerialData(1);   // 1 is the signal that repsresents that someone has gone inside the room
+          publishPersonPassage(1);   // 1 is the signal that repsresents that someone has gone inside the room
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
-          publishSerialData(2);
+          publishPersonPassage(2);
           }
       }
       for (int i=0; i<4; i++){
