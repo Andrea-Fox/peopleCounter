@@ -78,3 +78,20 @@ and this one turns the light off when the last person gets out of the room:
 
 ```
 
+
+One might also define an automation for recalibrating the thresholds every day at a certain time (let's say 4 am):
+```yaml
+- alias: 'Recalibrate threshold'
+  description: ''
+  id: 'recalibrate_threshold' # unique id here
+  trigger:
+    - at: '04:00:00'
+      platform: time
+  action:
+    - service: mqtt.publish
+      data:
+        topic: peopleCounterReceiver/serialdata/rx
+        payload_template: "new_threshold"
+  mode: single
+
+```
