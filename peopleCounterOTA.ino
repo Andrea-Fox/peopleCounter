@@ -173,12 +173,13 @@ void publishPersonPassage(int serialData){
 }
 
 
-void publishDistance(int serialData){
+void publishDistance(int serialData, int zona){
   //serialData = max(0, serialData);
   if (!client.connected()) {
     reconnect();
   }
-  String stringaCounter = String(serialData);
+  String stringaZona = "\t zona = ";
+  String stringaCounter = String(serialData)+ stringaZona + String(zona) + "\t" + String(PathTrack[0]) + String(PathTrack[1]) + String(PathTrack[2]) +String(PathTrack[3]);
   stringaCounter.toCharArray(peopleCounterArray, stringaCounter.length() +1);
   client.publish(mqtt_serial_publish_distance_ch, peopleCounterArray);
 }
