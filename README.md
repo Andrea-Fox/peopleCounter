@@ -151,7 +151,6 @@ The updated file allows OTA updates through the Arduino IDE. For more informatio
 I'm looking for someone with some 3d modelling experience in order to create a case for this sensor. 
 
 ## ToDo list
-- [x] adding ability to understand autonomously which is the optimal threshold for each ROI
 - [ ] adding ability to understand autonomously which are the optimal ROIs (if anyone has any suggestions on how to achieve this result let me know, because I have no idea how to solve this issue)
 
 ## Discord server
