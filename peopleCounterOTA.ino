@@ -282,7 +282,7 @@ void loop(void)
     distanceSensor.stopRanging();
   
     Serial.println(distance);
-    publishSerialDataDistanza(distance);
+    publishDistance(distance);
     
   
      // inject the new ranged distance in the people counting algorithm
