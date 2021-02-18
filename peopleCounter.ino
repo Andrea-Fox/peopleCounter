@@ -19,6 +19,8 @@ PubSubClient client(espClient);
 
 char peopleCounterArray[50];
 
+static int ROI_height = 4; // 5
+static int ROI_width = 4;  // 5
 
 //Optional interrupt and shutdown pins.  Vanno cambiati e messi quelli che hanno i collegamenti i^2C
 #define SHUTDOWN_PIN 2    
