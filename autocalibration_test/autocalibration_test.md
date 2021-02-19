@@ -7,7 +7,9 @@ This code is an attempt to improve the code in the main folder. Now the esp ia a
 The only parameter to determin is if the orientation of the sensor is the following (by changing the value in the boolean `advised_orientation_of_the_sensor`).
 
 The value is true when the sensor is positioned as in the following image:
-
+<p float="left">
+  <img src="sensor_orientation.png" width="300" />
+</p>
 
 
 
