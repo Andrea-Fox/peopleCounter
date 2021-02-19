@@ -11,6 +11,6 @@ The value is true when the sensor is positioned as in the following image:
   <img src="sensor_orientation.png" width="300" />
 </p>
 
-
+The arrow indicates the direction of the people passing under the sensor
 
 
