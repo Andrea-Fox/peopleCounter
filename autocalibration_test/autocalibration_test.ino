@@ -113,11 +113,11 @@ void zones_calibration(){
           center[1] = 247;
           break;
         case 6:
-          center[0] = 158;
+          center[0] = 159;
           center[1] = 239;
           break;
         case 7:
-          center[0] = 158;
+          center[0] = 159;
           center[1] = 239;
           break;
         case 8:
