@@ -83,7 +83,7 @@ One might also edit the name of the device in the MQTT network: this can be easi
 ### Parameters one might want to set
 The following parameteres are automatically set by the code one can find in the `autocalibration.ino` file. In that file, the only value one might want to add is `advised_orientation_of_the_sensor`, a boolean which is true if the sensor is positioned as in the following image:
 <p float="left">
-  <img src="sensor_orientation.png" width="300" />
+  <img src="autocalibration/sensor_orientation.png" width="300" />
 </p>
 
 The arrow indicates the direction of the people passing under the sensor
@@ -143,7 +143,7 @@ If you observe that when you get in a room the number of people inside it decrea
 ### OTA updates
 The updated file allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
 
-### Case for the sensor
+## Case for the sensor
 In the case folder you can find an stl file (created by @noxhirsch) for a case created if you are using a Wemos Mini ESP32 and [this sensor](https://de.aliexpress.com/item/4000065731557.html?spm=a2g0s.9042311.0.0.27424c4dgIS4KI). there is also the Fusion 360 file, if you want to modify it for other ESP32 or sensors. 
 
 
