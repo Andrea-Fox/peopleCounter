@@ -43,7 +43,28 @@ The following automation will take account of the case of someone exiting the ro
 
 ```
 
-
+If you are using a version of HA >=113.0, you can use only the followning automation (suggested by @noxhirsch) to handle the number of people in the room:
+```yaml
+alias: Person Counter
+trigger:
+  - platform: mqtt
+    topic: peopleCounter/serialdata/tx
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.payload == "1" }}'
+        sequence:
+          - service: input_number.increment
+            entity_id: input_number.people_counter
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.payload == "2" }}'
+        sequence:
+          - service: input_number.decrement
+            entity_id: input_number.people_counter
+mode: single
+```
 
 Finally, this automation will turn on a light when there is at least one person in the room:
 
