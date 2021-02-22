@@ -1,28 +1,47 @@
-
 #include <Wire.h>
 #include "SparkFun_VL53L1X.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
+const char* devicename = "name_for_this_device"; // sets MQTT topics and hostname for ArduinoOTA
 
-const char* ssid = "";     //wi-fi netwrok name
+const char* ssid = "";               //wi-fi networkk name
 const char* password = "";  //wi-fi network password
 const char* mqtt_server = "";   // mqtt broker ip address (without port)
-const int mqtt_port = ;                   // mqtt broker port
-const char *mqtt_user = "";
-const char *mqtt_pass = "";
+const int   mqtt_port = ;                 // mqtt broker port
+const char* mqtt_user = "";
+const char* mqtt_pass = "";
 
-#define mqtt_serial_publish_ch "peopleCounter/serialdata/tx"
-#define mqtt_serial_publish_distance_ch "peopleCounterDistance/serialdata/tx"
-#define mqtt_serial_receiver_ch "peopleCounterReceiver/serialdata/rx"
+// MQTT Topics
+// people_counter/DEVICENAME/counter
+// people_counter/DEVICENAME/distance
+// people_counter/DEVICENAME/receiver
 
-static bool advised_orientation_of_the_sensor = true;
+const int threshold_percentage = 80;
+
+// if "true", the raw measurements are sent via MQTT during runtime (for debugging) - I'd recommend setting it to "false" to save traffic and system resources.
+static bool update_raw_measurements = false;
+
 // this value has to be true if the sensor is oriented as in Duthdeffy's picture
+static bool advised_orientation_of_the_sensor = true;
 
 
 //*******************************************************************************************************************
 // all the code from this point and onwards doesn't have to be touched in order to have everything working (hopefully)
+
+char mqtt_serial_publish_ch_cache[50];
+char mqtt_serial_publish_distance_ch_cache[50];
+char mqtt_serial_receiver_ch_cache[50];
+
+int mqtt_counter = sprintf(mqtt_serial_publish_ch_cache,"%s%s%s","people_counter/", devicename,"/counter");
+const PROGMEM char* mqtt_serial_publish_ch = mqtt_serial_publish_ch_cache;
+int mqtt_distance = sprintf(mqtt_serial_publish_distance_ch_cache,"%s%s%s","people_counter/", devicename,"/distance");
+const PROGMEM char* mqtt_serial_publish_distance_ch = mqtt_serial_publish_distance_ch_cache;
+int mqtt_receiver = sprintf(mqtt_serial_receiver_ch_cache,"%s%s%s","people_counter/", devicename,"/receiver");
+const PROGMEM char* mqtt_serial_receiver_ch = mqtt_serial_receiver_ch_cache;
+
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -183,8 +202,8 @@ void zones_calibration(){
   }
   average_zone_0 = sum_zone_0 / number_attempts;
   average_zone_1 = sum_zone_1 / number_attempts;
-  float threshold_zone_0 = average_zone_0 * 80/100; // they can be int values, as we are not interested in the decimal part when defining the threshold
-  float threshold_zone_1 = average_zone_1 * 80/100;
+  float threshold_zone_0 = average_zone_0 * threshold_percentage/100; // they can be int values, as we are not interested in the decimal part when defining the threshold
+  float threshold_zone_1 = average_zone_1 * threshold_percentage/100;
   
   DIST_THRESHOLD_MAX[0] = threshold_zone_0;
   DIST_THRESHOLD_MAX[1] = threshold_zone_1;
@@ -315,7 +334,7 @@ void setup(void)
       else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
       else if (error == OTA_END_ERROR) Serial.println("End Failed");
     });
-  ArduinoOTA.setHostname("az_people_counter");
+  ArduinoOTA.setHostname(devicename);
   ArduinoOTA.begin();
 
   Serial.println("Ready");
@@ -344,7 +363,9 @@ void loop(void)
   distanceSensor.stopRanging();
 
   Serial.println(distance);
-  publishDistance(distance, Zone);
+  if(update_raw_measurements == true) {
+    publishDistance(distance, Zone);
+  }
 
    // inject the new ranged distance in the people counting algorithm
   processPeopleCountingData(distance, Zone);
