@@ -79,7 +79,16 @@ In order to connect to the WiFi, one has to specify the name of the WiFi network
 One might also edit the name of the device in the MQTT network: this can be easily done just by editing `mqtt_serial_publish_ch` and `mqtt_serial_receiver_ch`. The first one corresponds to the address used when publishing messages, while the second one corresponds to the address for messages sent to the board connected to the sensor.   
 **Important:** one also has to specify the informations about the MQTT server, otherwise (using an ESP32) it will be impossible to connect to the WiFi, as noted in [#3](https://github.com/Andrea-Fox/peopleCounter/issues/3)
 
-### Relevant area
+
+### Parameters one might want to set
+The following parameteres are automatically set by the code one can find in the `autocalibration.ino` file. In that file, the only value one might want to add is `advised_orientation_of_the_sensor`, a boolean which is true if the sensor is positioned as in the following image:
+<p float="left">
+  <img src="sensor_orientation.png" width="300" />
+</p>
+
+The arrow indicates the direction of the people passing under the sensor
+
+#### Relevant area
 
 In order to find the correct distance, the sensor creates a 16x16 grid and the final distance is computed by taking the average of the distance of the values of the grid; to perform our task, one has to create two zones, by defining two different Region of Interest (ROI) inside this grid. Then the sensor will measure the two distances in the two zones and will detect any presence. 
 
@@ -118,20 +127,24 @@ Be careful that both `ROI_width` and `ROI_heigth` have to be at least 4. The cen
 
 
 
-### Threshold distance
+#### Threshold distance
 
 Another crucial choice is the one corresponding to the threshold. Indeed a movement is detected whenever the distance read by the sensor is below this value. The code contains a vector as threshold, as one (as myself) might need a different threshold for each zone.
 
 The SparkFun library also supports more formats for the threshold: for example one can set that a movement is detected whenever the distance is between two values. However, more information for the interested reader can be found on the corresponding page.
 
-With the updated code (however only for esp32 at the moment) the threshold is automatically calculated by the sensor. To do so it is necessary to position the sensor and, after turning it on, wait for 10 seconds without passing under it. After this time, the average of the measures for each zone will be computed and the thereshold for each ROI will correspond to 80% of the average value.
+With the updated code (however only for esp32 at the moment) the threshold is automatically calculated by the sensor. To do so it is necessary to position the sensor and, after turning it on, wait for 10 seconds without passing under it. After this time, the average of the measures for each zone will be computed and the thereshold for each ROI will correspond to 80% of the average value. Also the value of 80% can be modified in the code, by editing the variable `threshold_percentage`
 
-The calibration of the threshold can also be triggered by a MQTT message. An example for doing so is in the file  `integration_with_home_assistant.md`.
+The calibration of the threshold can also be triggered by a MQTT message. An example for doing so is in the file `integration_with_home_assistant.md`.
 
 ### How to invert the two zones
+If you observe that when you get in a room the number of people inside it decreases, while it increases when you get out it means that the values of the centers are inverted. to solve this issue, you can simply invert the values 1 and 2 in the automations which regulate the number of people in the `integration_with_home_assistant.md` file.
 
-To invert the two zones, one might simply invert the values in the `center` vector.
+### OTA updates
+The updated file allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
 
+### Case for the sensor
+In the case folder you can find an stl file (created by @noxhirsch) for a case created if you are using a Wemos Mini ESP32 and [this sensor](https://de.aliexpress.com/item/4000065731557.html?spm=a2g0s.9042311.0.0.27424c4dgIS4KI). there is also the Fusion 360 file, if you want to modify it for other ESP32 or sensors. 
 
 
 ## Useful links
@@ -143,15 +156,6 @@ To invert the two zones, one might simply invert the values in the `center` vect
 [MQTT with ESP32 tutorial](https://iotdesignpro.com/projects/how-to-connect-esp32-mqtt-broker)
 
 
-## OTA updates
-The updated file allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
-
-
-## Case for the sensor
-I'm looking for someone with some 3d modelling experience in order to create a case for this sensor. 
-
-## ToDo list
-- [ ] adding ability to understand autonomously which are the optimal ROIs (if anyone has any suggestions on how to achieve this result let me know, because I have no idea how to solve this issue)
 
 ## Discord server
 If you want to discuss about the idea of finding the ultimate room presence sensor, feel free to join the dedicate Discord (created by @DutchDeffy): https://discord.gg/65eBamz7AS
