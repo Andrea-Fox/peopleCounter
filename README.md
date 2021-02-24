@@ -160,4 +160,7 @@ In the case folder you can find an stl file (created by @noxhirsch) for a case c
 ## Discord server
 If you want to discuss about the idea of finding the ultimate room presence sensor, feel free to join the dedicate Discord (created by @DutchDeffy): https://discord.gg/65eBamz7AS
 
-
+## Future features
+The goal of the following features that will be added in the future is to open the idea of the people counter also to people who are not familiar with the Arduino IDe and coding in general
+- [ ] add webserver functionalities: on the webpage of the sensor the user will be able to change the parameters of the autocalibration, such as the threshold, the orientation of the sensor and the functionality of publishing the distance for debug purposes
+- [ ] add the possibility to flash the code without using the Arduino IDE 
