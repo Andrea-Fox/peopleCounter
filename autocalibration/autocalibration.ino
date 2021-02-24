@@ -23,7 +23,7 @@ const int threshold_percentage = 80;
 
 // if "true", the raw measurements are sent via MQTT during runtime (for debugging) - I'd recommend setting it to "false" to save traffic and system resources.
 // in the calibration phase the raw measurements will still be sent through MQTT
-static bool update_raw_measurements = true;
+static bool update_raw_measurements = false;
 
 // this value has to be true if the sensor is oriented as in Duthdeffy's picture
 static bool advised_orientation_of_the_sensor = true;
