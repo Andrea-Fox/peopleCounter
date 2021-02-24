@@ -28,7 +28,7 @@ static bool update_raw_measurements = false;
 static bool advised_orientation_of_the_sensor = true;
 
 // this value has to be true if you don't need to compute the threshold every time the device is turned on
-static boolean save_calibration_result = true;
+static bool save_calibration_result = true;
 
 
 //*******************************************************************************************************************
