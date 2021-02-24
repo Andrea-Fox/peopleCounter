@@ -7,12 +7,12 @@
 
 const char* devicename = "name_for_this_device"; // sets MQTT topics and hostname for ArduinoOTA
 
-const char* ssid = "";               //wi-fi networkk name
+const char* ssid = "";     //wi-fi netwrok name
 const char* password = "";  //wi-fi network password
 const char* mqtt_server = "";   // mqtt broker ip address (without port)
-const int   mqtt_port = ;                 // mqtt broker port
-const char* mqtt_user = "";
-const char* mqtt_pass = "";
+const int mqtt_port = ;                   // mqtt broker port
+const char *mqtt_user = "";
+const char *mqtt_pass = "";
 
 // MQTT Topics
 // people_counter/DEVICENAME/counter
@@ -22,7 +22,8 @@ const char* mqtt_pass = "";
 const int threshold_percentage = 80;
 
 // if "true", the raw measurements are sent via MQTT during runtime (for debugging) - I'd recommend setting it to "false" to save traffic and system resources.
-static bool update_raw_measurements = false;
+// in the calibration phase the raw measurements will still be sent through MQTT
+static bool update_raw_measurements = true;
 
 // this value has to be true if the sensor is oriented as in Duthdeffy's picture
 static bool advised_orientation_of_the_sensor = true;
@@ -45,7 +46,7 @@ const PROGMEM char* mqtt_serial_publish_distance_ch = mqtt_serial_publish_distan
 int mqtt_receiver = sprintf(mqtt_serial_receiver_ch_cache,"%s%s%s","people_counter/", devicename,"/receiver");
 const PROGMEM char* mqtt_serial_receiver_ch = mqtt_serial_receiver_ch_cache;
 
-#define EEPROM_SIZE 6
+#define EEPROM_SIZE 8
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -76,173 +77,198 @@ static int PplCounter = 0;
 static int ROI_height = 0;
 static int ROI_width = 0;
 
-void zones_calibration(){
+
+void zones_calibration_boot(){
   if (save_calibration_result){
-    center[0] = EEPROM.read(0);
-    center[1] = EEPROM.read(1);
-    DIST_THRESHOLD_MAX[0] = EEPROM.read(2)*100 + EEPROM.read(3);
-    DIST_THRESHOLD_MAX[1] = EEPROM.read(4)*100 + EEPROM.read(5);
-  }
-  else{
-    // the sensor does 100 measurements for each zone (zones are predefined)
-    // each measurements is done with a timing budget of 100 ms, to increase the precision
-    client.publish(mqtt_serial_publish_distance_ch, "Computation of new threshold");
-    center[0] = 167;
-    center[1] = 231;
-    ROI_height = 8;
-    ROI_width = 8;
-    delay(500);
-    Zone = 0;
-    float sum_zone_0 = 0;
-    float sum_zone_1 = 0;
-    uint16_t distance;
-    int number_attempts = 20;
-    for (int i=0; i<number_attempts; i++){
-        // increase sum of values in Zone 0
-        distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-        delay(50);
-        distanceSensor.setTimingBudgetInMs(50);
-        distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-        distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-        distanceSensor.stopRanging();      
-        sum_zone_0 = sum_zone_0 + distance;
-        publishDistance(distance, 0);
-        Zone++;
-        Zone = Zone%2;
-  
-        // increase sum of values in Zone 1
-        distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-        delay(50);
-        distanceSensor.setTimingBudgetInMs(50);
-        distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-        distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-        distanceSensor.stopRanging();      
-        sum_zone_1 = sum_zone_1 + distance;
-        publishDistance(distance, 1);
-        Zone++;
-        Zone = Zone%2;
-    }
-    // after we have computed the sum for each zone, we can compute the average distance of each zone
-    float average_zone_0 = sum_zone_0 / number_attempts;
-    float average_zone_1 = sum_zone_1 / number_attempts;
-    // the value of the average distance is used for computing the optimal size of the ROI and consequently also the center of the two zones
-    int function_of_the_distance = 16*(1 - (0.15 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
-    publishDistance(function_of_the_distance, 1);
-    delay(1000);
-    int ROI_size = min(8, max(4, function_of_the_distance));
-    ROI_width = ROI_size;
-    ROI_height = ROI_size;
-    if (advised_orientation_of_the_sensor){
+    // if possible, we take the old values of the zones contained in the EEPROM memory
+    client.publish(mqtt_serial_publish_distance_ch, "save calibration result true");
+    if (EEPROM.read(0) == 1){
+      // we have data in the EEPROM
+      client.publish(mqtt_serial_publish_distance_ch, "EEPROM memroy not empty");
+      center[0] = EEPROM.read(1);
+      center[1] = EEPROM.read(2);
+      ROI_height = EEPROM.read(3);
+      ROI_width = EEPROM.read(3);
+      DIST_THRESHOLD_MAX[0] = EEPROM.read(4)*100 + EEPROM.read(5);;
+      DIST_THRESHOLD_MAX[1] = EEPROM.read(6)*100 + EEPROM.read(7);
       
-      switch (ROI_size) {
-          case 4:
-            center[0] = 150;
-            center[1] = 247;
-            break;
-          case 5:
-            center[0] = 150;
-            center[1] = 247;
-            break;
-          case 6:
-            center[0] = 159;
-            center[1] = 239;
-            break;
-          case 7:
-            center[0] = 159;
-            center[1] = 239;
-            break;
-          case 8:
-            center[0] = 167;
-            center[1] = 231;
-            break;
-        }
+      publishDistance(center[0], 0);
+      publishDistance(center[1], 0);
+      publishDistance(ROI_width, 0);
+      publishDistance(ROI_height, 0);
+      publishDistance(DIST_THRESHOLD_MAX[0], 0);
+      publishDistance(DIST_THRESHOLD_MAX[1], 0);
+      client.publish(mqtt_serial_publish_distance_ch, "All values updated");
     }
     else{
-      switch (ROI_size) {
-          case 4:
-            center[0] = 195;
-            center[1] = 60;
-             break;
-          case 5:
-            center[0] = 194;
-            center[1] = 59;
-            break;
-          case 6:
-            center[0] = 194;
-            center[1] = 59;
-            break;
-          case 7:
-            center[0] = 193;
-            center[1] = 58;
-            break;
-          case 8:
-            center[0] = 193;
-            center[1] = 58;
-            break;
-        }
+      // there are no data in the EEPROM memory
+      zones_calibration();
     }
-    client.publish(mqtt_serial_publish_distance_ch, "ROI size");
-    publishDistance(ROI_size, 0);  
-    client.publish(mqtt_serial_publish_distance_ch, "centers of the ROIs defined");
-    publishDistance(center[0], 0);   
-    publishDistance(center[1], 1);
-    delay(2000);
-    // we will now repeat the calculations necessary to define the thresholds with the updated zones
-    Zone = 0;
-    sum_zone_0 = 0;
-    sum_zone_1 = 0;
-    for (int i=0; i<number_attempts; i++){
-        // increase sum of values in Zone 0
-        distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-        delay(50);
-        distanceSensor.setTimingBudgetInMs(50);
-        distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-        distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-        distanceSensor.stopRanging();      
-        sum_zone_0 = sum_zone_0 + distance;
-        publishDistance(distance, 0);
-        Zone++;
-        Zone = Zone%2;
-  
-        // increase sum of values in Zone 1
-        distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-        delay(50);
-        distanceSensor.setTimingBudgetInMs(50);
-        distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-        distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-        distanceSensor.stopRanging();      
-        sum_zone_1 = sum_zone_1 + distance;
-        publishDistance(distance, 1);
-        Zone++;
-        Zone = Zone%2;
-    }
-    average_zone_0 = sum_zone_0 / number_attempts;
-    average_zone_1 = sum_zone_1 / number_attempts;
-    float threshold_zone_0 = average_zone_0 * threshold_percentage/100; // they can be int values, as we are not interested in the decimal part when defining the threshold
-    float threshold_zone_1 = average_zone_1 * threshold_percentage/100;
-    
-    DIST_THRESHOLD_MAX[0] = threshold_zone_0;
-    DIST_THRESHOLD_MAX[1] = threshold_zone_1;
-    client.publish(mqtt_serial_publish_distance_ch, "new threshold defined");
-    publishDistance(threshold_zone_0, 0);   
-    publishDistance(threshold_zone_1, 1);
-    delay(2000);
-
-    // we now save the values into the EEPROM memory
-    int hundred_threshold_zone_0 = threshold_zone_0 / 100;
-    int hundred_threshold_zone_1 = threshold_zone_1 / 100;
-    int unit_threshold_zone_0 = threshold_zone_0 - 100* hundred_threshold_zone_0;
-    int unit_threshold_zone_1 = threshold_zone_1 - 100* hundred_threshold_zone_1;
-
-    EEPROM.write(0, center[0]);
-    EEPROM.write(1, center[1]);
-    EEPROM.write(2, hundred_threshold_zone_0);
-    EEPROM.write(3, unit_threshold_zone_0);
-    EEPROM.write(4, hundred_threshold_zone_1);
-    EEPROM.write(5, unit_threshold_zone_1);
-    EEPROM.commit();
-    
   }
+  else
+    zones_calibration();
+}
+
+void zones_calibration(){
+  // the sensor does 100 measurements for each zone (zones are predefined)
+  // each measurements is done with a timing budget of 100 ms, to increase the precision
+  client.publish(mqtt_serial_publish_distance_ch, "Computation of new threshold");
+  center[0] = 167;
+  center[1] = 231;
+  ROI_height = 8;
+  ROI_width = 8;
+  delay(500);
+  Zone = 0;
+  float sum_zone_0 = 0;
+  float sum_zone_1 = 0;
+  uint16_t distance;
+  int number_attempts = 20;
+  for (int i=0; i<number_attempts; i++){
+      // increase sum of values in Zone 0
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_0 = sum_zone_0 + distance;
+      publishDistance(distance, 0);
+      Zone++;
+      Zone = Zone%2;
+
+      // increase sum of values in Zone 1
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_1 = sum_zone_1 + distance;
+      publishDistance(distance, 1);
+      Zone++;
+      Zone = Zone%2;
+  }
+  // after we have computed the sum for each zone, we can compute the average distance of each zone
+  float average_zone_0 = sum_zone_0 / number_attempts;
+  float average_zone_1 = sum_zone_1 / number_attempts;
+  // the value of the average distance is used for computing the optimal size of the ROI and consequently also the center of the two zones
+  int function_of_the_distance = 16*(1 - (0.15 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
+  publishDistance(function_of_the_distance, 1);
+  delay(1000);
+  int ROI_size = min(8, max(4, function_of_the_distance));
+  ROI_width = ROI_size;
+  ROI_height = ROI_size;
+  if (advised_orientation_of_the_sensor){
+    
+    switch (ROI_size) {
+        case 4:
+          center[0] = 150;
+          center[1] = 247;
+          break;
+        case 5:
+          center[0] = 150;
+          center[1] = 247;
+          break;
+        case 6:
+          center[0] = 159;
+          center[1] = 239;
+          break;
+        case 7:
+          center[0] = 159;
+          center[1] = 239;
+          break;
+        case 8:
+          center[0] = 167;
+          center[1] = 231;
+          break;
+      }
+  }
+  else{
+    switch (ROI_size) {
+        case 4:
+          center[0] = 195;
+          center[1] = 60;
+           break;
+        case 5:
+          center[0] = 194;
+          center[1] = 59;
+          break;
+        case 6:
+          center[0] = 194;
+          center[1] = 59;
+          break;
+        case 7:
+          center[0] = 193;
+          center[1] = 58;
+          break;
+        case 8:
+          center[0] = 193;
+          center[1] = 58;
+          break;
+      }
+  }
+  client.publish(mqtt_serial_publish_distance_ch, "ROI size");
+  publishDistance(ROI_size, 0);  
+  client.publish(mqtt_serial_publish_distance_ch, "centers of the ROIs defined");
+  publishDistance(center[0], 0);   
+  publishDistance(center[1], 1);
+  delay(2000);
+  // we will now repeat the calculations necessary to define the thresholds with the updated zones
+  Zone = 0;
+  sum_zone_0 = 0;
+  sum_zone_1 = 0;
+  for (int i=0; i<number_attempts; i++){
+      // increase sum of values in Zone 0
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_0 = sum_zone_0 + distance;
+      publishDistance(distance, 0);
+      Zone++;
+      Zone = Zone%2;
+
+      // increase sum of values in Zone 1
+      distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+      delay(50);
+      distanceSensor.setTimingBudgetInMs(50);
+      distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+      distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+      distanceSensor.stopRanging();      
+      sum_zone_1 = sum_zone_1 + distance;
+      publishDistance(distance, 1);
+      Zone++;
+      Zone = Zone%2;
+  }
+  average_zone_0 = sum_zone_0 / number_attempts;
+  average_zone_1 = sum_zone_1 / number_attempts;
+  float threshold_zone_0 = average_zone_0 * threshold_percentage/100; // they can be int values, as we are not interested in the decimal part when defining the threshold
+  float threshold_zone_1 = average_zone_1 * threshold_percentage/100;
+  
+  DIST_THRESHOLD_MAX[0] = threshold_zone_0;
+  DIST_THRESHOLD_MAX[1] = threshold_zone_1;
+  client.publish(mqtt_serial_publish_distance_ch, "new threshold defined");
+  publishDistance(threshold_zone_0, 0);   
+  publishDistance(threshold_zone_1, 1);
+  delay(2000);
+
+  // we now save the values into the EEPROM memory
+  int hundred_threshold_zone_0 = threshold_zone_0 / 100;
+  int hundred_threshold_zone_1 = threshold_zone_1 / 100;
+  int unit_threshold_zone_0 = threshold_zone_0 - 100* hundred_threshold_zone_0;
+  int unit_threshold_zone_1 = threshold_zone_1 - 100* hundred_threshold_zone_1;
+
+  EEPROM.write(0, 1);
+  EEPROM.write(1, center[0]);
+  EEPROM.write(2, center[1]);
+  EEPROM.write(3, ROI_size);
+  EEPROM.write(4, hundred_threshold_zone_0);
+  EEPROM.write(5, unit_threshold_zone_0);
+  EEPROM.write(6, hundred_threshold_zone_1);
+  EEPROM.write(7, unit_threshold_zone_1);
+  EEPROM.commit();
   
 }
 
@@ -341,7 +367,7 @@ void setup(void)
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   delay(1000);
-  zones_calibration();
+  zones_calibration_boot();
   reconnect();  
   
   ArduinoOTA
@@ -502,3 +528,5 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
     }
   }
 }
+
+
