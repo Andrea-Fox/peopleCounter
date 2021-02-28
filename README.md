@@ -1,4 +1,4 @@
-# MQTT People counter
+# ESP people counter
 
 This repository contains a program (to be flashed, for example on an ESP32, using the Arduino IDE) which allows to create a sensor capable of detecting people going in and out of a room. It works using the VL53L1X sensor by ST Microelectronics. The passage detection is then shared through the MQTT protocol and the count of the people in the room is done directly on other platform such as Home Assistant (see the dedicated file for a smooth integration in Home Assistant).
 
@@ -23,7 +23,7 @@ Then, depending on which are the first and the second zone, the movement will be
 
 ### Sensor
 
-As I previuosly stated, the library used to write the code is built for the [Sparkfun Distance Sensor](https://www.sparkfun.com/products/14722), but also works using the [Pololu VL53L31X sensor](https://www.pololu.com/product/3415).
+As previously stated, the library used to write the code is built for the [Sparkfun Distance Sensor](https://www.sparkfun.com/products/14722), but also works using the [Pololu VL53L31X sensor](https://www.pololu.com/product/3415).
 It probably should also work with other VL53L1X sensors, however I've never tried it.
 
 ### Board
@@ -69,8 +69,9 @@ It is also possible to use an ESP8266, using, for example, the following connect
                        D1 - SCL
 ```
 
-
 ## How to adapt the code to your case
+
+The sensor can be mounted on the top of a door frame or on the side. It has been observed that if the door is wide it is more convenient to mount the sensor on the side.
 
 ### WiFi information
 
@@ -79,88 +80,57 @@ In order to connect to the WiFi, one has to specify the name of the WiFi network
 One might also edit the name of the device in the MQTT network: this can be easily done just by editing `mqtt_serial_publish_ch` and `mqtt_serial_receiver_ch`. The first one corresponds to the address used when publishing messages, while the second one corresponds to the address for messages sent to the board connected to the sensor.   
 **Important:** one also has to specify the informations about the MQTT server, otherwise (using an ESP32) it will be impossible to connect to the WiFi, as noted in [#3](https://github.com/Andrea-Fox/peopleCounter/issues/3)
 
-
 ### Parameters one might want to set
-The following parameteres are automatically set by the code one can find in the `autocalibration.ino` file. In that file, the only value one might want to add is `advised_orientation_of_the_sensor`, a boolean which is true if the sensor is positioned as in the following image:
+
+In the first few lines of the code in the main folder, there are a few parameters which can be modified: (in the parentheses, are indicated the default values)
+
+- `threshold_percentage` (80)
+- `update_raw_measurements` (false)
+- `advised_orientation_of_the_sensor` (true)
+- `save_calibration_result` (true)
+
+#### Threshold percentage
+
+After mounting the sensor, it detects automatically the height at which it is situated. When the sensor is working, a person is detected if the distance measured is below a certain threshold, hence defining the right thresholds is pivotal to guarantee a correct functioning of the whole system. It has been observed that having as threshold a value which is 80% of the distance measured in general produces good results, however one might observe that is his sistuation another value of the threshold is better.
+
+#### Update raw measurements
+In the initial phase, or when debugging, it can be useful to read the distance measured every 100 ms by the sensor, however in general thish is not useful and produces an useless cinsumption of the resources.
+This value has to be set to true if one wants to read the distances measured, however the advice is to hold that to `false` 
+
+#### Advised orientation of the sensor
+This value is going to deterin the center of each zone of detection and has to be true if the sensor is positioned as in the following image:
 <p float="left">
   <img src="autocalibration/sensor_orientation.png" width="300" />
 </p>
 
-The arrow indicates the direction of the people passing under the sensor
+The arrow indicates the direction of the people passing under the sensor.
 
-#### Relevant area
-
-In order to find the correct distance, the sensor creates a 16x16 grid and the final distance is computed by taking the average of the distance of the values of the grid; to perform our task, one has to create two zones, by defining two different Region of Interest (ROI) inside this grid. Then the sensor will measure the two distances in the two zones and will detect any presence. 
-
-However, the algorithm is very sensitive to the slightest modification of the ROI, regarding both its size and its positioning inside the grid.
-
-In the original code, developed by ST Microelectronics, the values for the parameters are the following:
-
-- `ROI_width = 8`
-- `ROI_height = 16`
-- `center = {167,231}`
-however, I've noticed better performances with the values suggested in the code above.
-
-Be careful that both `ROI_width` and `ROI_heigth` have to be at least 4. The center of the ROI you set is based on the table below and the optical center has to be set as the pad above and to the right of your exact center:
+#### Save calibration result
+If this value is true, then the results of the calibration of the zones are going to be stored in the EEPROM memory, hence if the ESP is turned off no data is going to be lost. If false, every time the sensor is turned on, a new calibraion is launched, however that is useless if the sensor is always in the same position.
+A recalibration can still be called using the MQTT command (see the integration with Home Assistant file)
 
 
+### Additional information
 
-| 128  | 136  | 144  | 152  | 160  | 168  | 176  | 184  | 192  | 200  | 208  | 216  | 224  | 232  | 240  | 248  |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| 129  | 137  | 145  | 153  | 161  | 169  | 177  | 185  | 193  | 201  | 209  | 217  | 225  | 233  | 241  | 249  |
-| 130  | 138  | 146  | 154  | 162  | 170  | 178  | 186  | 194  | 202  | 210  | 218  | 226  | 234  | 242  | 250  |
-| 131  | 139  | 146  | 155  | 163  | 171  | 179  | 187  | 195  | 203  | 211  | 219  | 227  | 235  | 243  | 251  |
-| 132  | 140  | 147  | 156  | 164  | 172  | 180  | 188  | 196  | 204  | 212  | 220  | 228  | 236  | 244  | 252  |
-| 133  | 141  | 148  | 157  | 165  | 173  | 181  | 189  | 197  | 205  | 213  | 221  | 229  | 237  | 245  | 253  |
-| 134  | 142  | 149  | 158  | 166  | 174  | 182  | 190  | 198  | 206  | 214  | 222  | 230  | 238  | 246  | 254  |
-| 135  | 143  | 150  | 159  | 167  | 175  | 183  | 191  | 199  | 207  | 215  | 223  | 231  | 239  | 247  | 255  |
-| 127  | 119  | 111  | 103  | 95   | 87   | 79   | 71   | 63   | 55   | 47   | 39   | 31   | 23   | 15   | 7    |
-| 126  | 118  | 110  | 102  | 94   | 86   | 78   | 70   | 62   | 54   | 46   | 38   | 30   | 22   | 14   | 6    |
-| 125  | 117  | 109  | 101  | 93   | 85   | 77   | 69   | 61   | 53   | 45   | 37   | 29   | 21   | 13   | 5    |
-| 124  | 116  | 108  | 100  | 92   | 84   | 76   | 68   | 60   | 52   | 44   | 36   | 28   | 20   | 12   | 4    |
-| 123  | 115  | 107  | 99   | 91   | 83   | 75   | 67   | 59   | 51   | 43   | 35   | 27   | 19   | 11   | 3    |
-| 122  | 114  | 106  | 98   | 90   | 82   | 74   | 66   | 58   | 50   | 42   | 34   | 26   | 18   | 10   | 2    |
-| 121  | 113  | 105  | 97   | 89   | 81   | 73   | 65   | 57   | 49   | 41   | 33   | 25   | 17   | 9    | 1    |
-| 120  | 112  | 104  | 96   | 88   | 80   | 72   | 64   | 56   | 48   | 40   | 32   | 24   | 16   | 8    | 0    |
+Additional information about the parameters used in the code can be found in the `additional_information.md` file in the `manual_configuration` folder
 
-
-
-
-
-#### Threshold distance
-
-Another crucial choice is the one corresponding to the threshold. Indeed a movement is detected whenever the distance read by the sensor is below this value. The code contains a vector as threshold, as one (as myself) might need a different threshold for each zone.
-
-The SparkFun library also supports more formats for the threshold: for example one can set that a movement is detected whenever the distance is between two values. However, more information for the interested reader can be found on the corresponding page.
-
-With the updated code (however only for esp32 at the moment) the threshold is automatically calculated by the sensor. To do so it is necessary to position the sensor and, after turning it on, wait for 10 seconds without passing under it. After this time, the average of the measures for each zone will be computed and the thereshold for each ROI will correspond to 80% of the average value. Also the value of 80% can be modified in the code, by editing the variable `threshold_percentage`
-
-The calibration of the threshold can also be triggered by a MQTT message. An example for doing so is in the file `integration_with_home_assistant.md`.
 
 ### How to invert the two zones
 If you observe that when you get in a room the number of people inside it decreases, while it increases when you get out it means that the values of the centers are inverted. to solve this issue, you can simply invert the values 1 and 2 in the automations which regulate the number of people in the `integration_with_home_assistant.md` file.
 
-### OTA updates
-The updated file allows OTA updates through the Arduino IDE. For more information about OTA updates in Arduino, one may look at [this article](https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/)
+### Direct sunlight pointing towards the sensor
+It has been observed by several user, such as myself, that when direct sunlight (or even glares on a very sunny day) points toward the sensor, the precision of the measurements is influenced and this can bring to several false detections, even one every few seconds. Unfortunately, at the moment, this issue cannot be solved via software.
+
+
 
 ## Case for the sensor
-In the case folder you can find an stl file (created by @noxhirsch) for a case created if you are using a Wemos Mini ESP32 and [this sensor](https://de.aliexpress.com/item/4000065731557.html?spm=a2g0s.9042311.0.0.27424c4dgIS4KI). there is also the Fusion 360 file, if you want to modify it for other ESP32 or sensors. 
 
-
-## Useful links
-
-[PDf file with more information about the algorithm](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwilvayvxY7rAhUDDOwKHXhZCqkQFjAFegQIAxAB&url=https%3A%2F%2Fwww.st.com%2Fresource%2Fen%2Fuser_manual%2Fdm00626942-counting-people-with-the-vl53l1x-longdistance-ranging-timeofflight-sensor-stmicroelectronics.pdf&usg=AOvVaw3-q-bXHDXmQx6cFFnkOOUs): this PDF is an in-depth explanation of the algorithm and contains technical details about the sensor
-
-[SparkFun library guide](https://learn.sparkfun.com/tutorials/qwiic-distance-sensor-vl53l1x-hookup-guide/all) with more information about the functions used in the code
-
-[MQTT with ESP32 tutorial](https://iotdesignpro.com/projects/how-to-connect-esp32-mqtt-broker)
+In the `case` folder you can find an several stl files created by @noxhirsch for a case that fits both the ESP and the VL53L1X sensor.
 
 
 
 ## Discord server
-If you want to discuss about the idea of finding the ultimate room presence sensor, feel free to join the dedicate Discord (created by @DutchDeffy): https://discord.gg/65eBamz7AS
 
-## Future features
-The goal of the following features that will be added in the future is to open the idea of the people counter also to people who are not familiar with the Arduino IDe and coding in general
-- [ ] add webserver functionalities: on the webpage of the sensor the user will be able to change the parameters of the autocalibration, such as the threshold, the orientation of the sensor and the functionality of publishing the distance for debug purposes
-- [ ] add the possibility to flash the code without using the Arduino IDE 
+If you want to discuss about the idea of finding the ultimate room presence sensor, feel free to join the dedicate Discord server, created by @DutchDeffy: https://discord.gg/65eBamz7AS
+
+
