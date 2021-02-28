@@ -25,7 +25,7 @@ const int threshold_percentage = 80;
 // in the calibration phase the raw measurements will still be sent through MQTT
 static bool update_raw_measurements = false;
 
-// this value has to be true if the sensor is oriented as in Duthdeffy's picture
+// this value has to be true if the sensor is oriented as in the picture below
 static bool advised_orientation_of_the_sensor = true;
 
 // this value has to be true if you don't need to compute the threshold every time the device is turned on
