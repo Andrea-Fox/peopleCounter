@@ -84,10 +84,14 @@ One might also edit the name of the device in the MQTT network: this can be easi
 
 In the first few lines of the code in the main folder, there are a few parameters which can be modified: (in the parentheses, are indicated the default values)
 
+- `devicename` (name_for_this_device)
 - `threshold_percentage` (80)
 - `update_raw_measurements` (false)
 - `advised_orientation_of_the_sensor` (true)
 - `save_calibration_result` (true)
+
+#### Name of the device
+It indicates the room in which the sensor is going to be positioned. It will simplt change the MQTT topics and will help when multiple sensors are placed around the house.
 
 #### Threshold percentage
 
