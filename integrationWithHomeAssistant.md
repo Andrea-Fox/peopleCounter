@@ -1,9 +1,11 @@
 # Integration with the Home Assistant
+These example of automations are based on the topics defined in the file with automatic calibration called either `people_counter_esp32.ino` or `people_counter_esp8266`. If you are using the file in the `manual calibration` folder, you will have to change the topics.
 
 In order to integrate this sensor inside your Home Assistant setup, the following chunks of code need to be added to the appropriate files.
 
 **We will have to define an input number**, that simply will count the number of people inside the room. It will be called `input_number.people_in_the_room`
 
+The parameter DEVICENAME has to be set in the code, at the beginning of it.
 
 #### automations.yaml
 
@@ -15,7 +17,7 @@ We now need to define two automations that will allow us to understand when some
   id: 'person_entering_the_room' # unique id here
   trigger:
      - platform: mqtt
-       topic: "peopleCounter/serialdata/tx"
+       topic: "people_counter/DEVICENAME/counter"
        payload: '1'
   action:
      - service: input_number.increment
@@ -33,7 +35,7 @@ The following automation will take account of the case of someone exiting the ro
   id: 'person_exiting_the_room' # unique id here
   trigger:
      - platform: mqtt
-       topic: "peopleCounter/serialdata/tx"
+       topic: "people_counter/DEVICENAME/counter"
        payload: '2'
   action:
      - service: input_number.decrement
@@ -48,7 +50,7 @@ If you are using a version of HA >=113.0, you can use only the followning automa
 alias: Person Counter
 trigger:
   - platform: mqtt
-    topic: peopleCounter/serialdata/tx
+    topic: people_counter/DEVICENAME/counter
 action:
   - choose:
       - conditions:
@@ -111,7 +113,7 @@ One might also define an automation for recalibrating the thresholds every day a
   action:
     - service: mqtt.publish
       data:
-        topic: peopleCounterReceiver/serialdata/rx
+        topic: people_counter/DEVICENAME/receiver
         payload_template: "new_threshold"
   mode: single
 
