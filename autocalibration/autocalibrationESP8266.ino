@@ -186,8 +186,8 @@ void zones_calibration(){
   else{
     switch (ROI_size) {
         case 4:
-          center[0] = 195;
-          center[1] = 60;
+          center[0] = 193;
+          center[1] = 58;
            break;
         case 5:
           center[0] = 194;
@@ -198,12 +198,12 @@ void zones_calibration(){
           center[1] = 59;
           break;
         case 7:
-          center[0] = 193;
-          center[1] = 58;
+          center[0] = 195;
+          center[1] = 60;
           break;
         case 8:
-          center[0] = 193;
-          center[1] = 58;
+          center[0] = 195;
+          center[1] = 60;
           break;
       }
   }
