@@ -300,6 +300,19 @@ void callback(char* topic, byte *payload, unsigned int length) {
       {
         zones_calibration();
       }
+      if (newPayload == "update_raw_measurements")
+        {
+          if (update_raw_measurements)
+          {
+            // it is true, then it is going to be changed to false
+            update_raw_measurements = false;
+          }
+          else
+          {
+            update_raw_measurements = true;
+          }
+          delay(200);
+        }
     }
 }
 
