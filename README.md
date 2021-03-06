@@ -96,7 +96,8 @@ After mounting the sensor, it detects automatically the height at which it is si
 
 #### Update raw measurements
 In the initial phase, or when debugging, it can be useful to read the distance measured every 100 ms by the sensor, however in general thish is not useful and produces an useless cinsumption of the resources.
-This value has to be set to true if one wants to read the distances measured, however the advice is to hold that to `false` 
+This value has to be set to true if one wants to read the distances measured, however the advice is to hold that to `false`.  
+One can change this value through MQTT using the command "update_raw_measurement".
 
 #### Advised orientation of the sensor
 This value is going to deterin the center of each zone of detection and has to be true if the sensor is positioned as in the following image:
