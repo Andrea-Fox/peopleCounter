@@ -152,7 +152,7 @@ void zones_calibration(){
   float average_zone_0 = sum_zone_0 / number_attempts;
   float average_zone_1 = sum_zone_1 / number_attempts;
   // the value of the average distance is used for computing the optimal size of the ROI and consequently also the center of the two zones
-  int function_of_the_distance = 16*(1 - (0.15 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
+  int function_of_the_distance = 16*(1 - (0.22 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
   publishDistance(function_of_the_distance, 1);
   delay(1000);
   int ROI_size = min(8, max(4, function_of_the_distance));
