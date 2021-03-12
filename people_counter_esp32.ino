@@ -64,6 +64,8 @@ static int LEFT = 0;
 static int RIGHT = 1;
 
 static int DIST_THRESHOLD_MAX[] = {0, 0};   // treshold of the two zones
+static int MIN_DISTANCE[] = {100, 100};
+
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
@@ -458,7 +460,7 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
     int AllZonesCurrentStatus = 0;
     int AnEventHasOccured = 0;
 
-  if (Distance < DIST_THRESHOLD_MAX[Zone]) {
+  if (Distance < DIST_THRESHOLD_MAX[Zone] && Distance > MIN_DISTANCE[Zone]) {
     // Someone is in !
     CurrentZoneStatus = SOMEONE;
   }
