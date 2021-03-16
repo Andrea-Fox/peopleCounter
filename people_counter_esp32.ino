@@ -168,16 +168,16 @@ void zones_calibration(){
           center[1] = 247;
           break;
         case 5:
-          center[0] = 150;
-          center[1] = 247;
+          center[0] = 159;
+          center[1] = 239;
           break;
         case 6:
           center[0] = 159;
           center[1] = 239;
           break;
         case 7:
-          center[0] = 159;
-          center[1] = 239;
+          center[0] = 167;
+          center[1] = 231;
           break;
         case 8:
           center[0] = 167;
