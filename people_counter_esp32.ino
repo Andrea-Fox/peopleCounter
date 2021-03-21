@@ -374,7 +374,7 @@ void setup(void)
 
   if (distanceSensor.init() == false)
     Serial.println("Sensor online!");
-  distanceSensor.setIntermeasurementPeriod(100);
+  distanceSensor.setIntermeasurementPeriod(50);
   distanceSensor.setDistanceModeLong();
 
   Serial.setTimeout(500);// Set time out for setup_wifi();
@@ -432,7 +432,7 @@ void loop(void)
   
   
   distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-  delay(50);
+  delay(55);
   distanceSensor.setTimingBudgetInMs(50);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
   distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
