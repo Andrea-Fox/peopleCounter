@@ -1,16 +1,19 @@
+
 #include <Wire.h>
 #include "SparkFun_VL53L1X.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ESPmDNS.h>
+#include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 
-const char* devicename = "name_for_this_device"; // sets MQTT topics and hostname for ArduinoOTA
+const char* devicename = "name_of_the_device"; // sets MQTT topics and hostname for ArduinoOTA
 
 const char* ssid = "";     //wi-fi netwrok name
 const char* password = "";  //wi-fi network password
 const char* mqtt_server = "";   // mqtt broker ip address (without port)
-const int mqtt_port = ;                   // mqtt broker port
+const int mqtt_port = 0;                   // mqtt broker port
 const char *mqtt_user = "";
 const char *mqtt_pass = "";
 
@@ -23,14 +26,16 @@ const int threshold_percentage = 80;
 
 // if "true", the raw measurements are sent via MQTT during runtime (for debugging) - I'd recommend setting it to "false" to save traffic and system resources.
 // in the calibration phase the raw measurements will still be sent through MQTT
-static bool update_raw_measurements = false;
+static bool update_raw_measurements = true;
 
-// this value has to be true if the sensor is oriented as in the picture below
+// this value has to be true if the sensor is oriented as in Duthdeffy's picture
 static bool advised_orientation_of_the_sensor = true;
 
 // this value has to be true if you don't need to compute the threshold every time the device is turned on
 static bool save_calibration_result = true;
 
+// value which defines the threshold which activates the short distance mode (the sensor supports it only up to a distance of 1300 mm)
+static int short_distance_threshold = 1300;
 
 //*******************************************************************************************************************
 // all the code from this point and onwards doesn't have to be touched in order to have everything working (hopefully)
@@ -64,8 +69,6 @@ static int LEFT = 0;
 static int RIGHT = 1;
 
 static int DIST_THRESHOLD_MAX[] = {0, 0};   // treshold of the two zones
-static int MIN_DISTANCE[] = {0, 0};
-
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
@@ -79,6 +82,10 @@ static int PplCounter = 0;
 static int ROI_height = 0;
 static int ROI_width = 0;
 
+static int delay_between_measurements = 50;
+static int time_budget_in_ms = 50;
+
+
 
 void zones_calibration_boot(){
   if (save_calibration_result){
@@ -91,9 +98,22 @@ void zones_calibration_boot(){
       center[1] = EEPROM.read(2);
       ROI_height = EEPROM.read(3);
       ROI_width = EEPROM.read(3);
-      DIST_THRESHOLD_MAX[0] = EEPROM.read(4)*100 + EEPROM.read(5);;
+      DIST_THRESHOLD_MAX[0] = EEPROM.read(4)*100 + EEPROM.read(5);
       DIST_THRESHOLD_MAX[1] = EEPROM.read(6)*100 + EEPROM.read(7);
-      
+
+      // if the distance measured is small, then we can use the short range mode of the sensor
+      if (min(DIST_THRESHOLD_MAX[0], DIST_THRESHOLD_MAX[1]) <= short_distance_threshold){
+        distanceSensor.setIntermeasurementPeriod(20);
+        distanceSensor.setDistanceModeShort();
+        time_budget_in_ms = 20;
+        delay_between_measurements = 22;
+      }
+      else {
+        distanceSensor.setIntermeasurementPeriod(50);
+        distanceSensor.setDistanceModeLong();
+        time_budget_in_ms = 50;
+        delay_between_measurements = 55;
+      }
       publishDistance(center[0], 0);
       publishDistance(center[1], 0);
       publishDistance(ROI_width, 0);
@@ -115,11 +135,17 @@ void zones_calibration(){
   // the sensor does 100 measurements for each zone (zones are predefined)
   // each measurements is done with a timing budget of 100 ms, to increase the precision
   client.publish(mqtt_serial_publish_distance_ch, "Computation of new threshold");
+  // we set the standard values for the measurements
+  distanceSensor.setIntermeasurementPeriod(100);
+  distanceSensor.setDistanceModeLong();
+  time_budget_in_ms = 50;
+  delay_between_measurements = 50;
   center[0] = 167;
   center[1] = 231;
   ROI_height = 8;
   ROI_width = 8;
   delay(500);
+  
   Zone = 0;
   float sum_zone_0 = 0;
   float sum_zone_1 = 0;
@@ -128,8 +154,8 @@ void zones_calibration(){
   for (int i=0; i<number_attempts; i++){
       // increase sum of values in Zone 0
       distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-      delay(50);
-      distanceSensor.setTimingBudgetInMs(50);
+      delay(delay_between_measurements);
+      distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
       distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
       distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
       distanceSensor.stopRanging();      
@@ -140,8 +166,8 @@ void zones_calibration(){
 
       // increase sum of values in Zone 1
       distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-      delay(50);
-      distanceSensor.setTimingBudgetInMs(50);
+      delay(delay_between_measurements);
+      distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
       distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
       distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
       distanceSensor.stopRanging();      
@@ -154,12 +180,23 @@ void zones_calibration(){
   float average_zone_0 = sum_zone_0 / number_attempts;
   float average_zone_1 = sum_zone_1 / number_attempts;
   // the value of the average distance is used for computing the optimal size of the ROI and consequently also the center of the two zones
-  int function_of_the_distance = 16*(1 - (0.22 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
+  int function_of_the_distance = 16*(1 - (0.15 * 2) / (0.34 * (min(average_zone_0, average_zone_1)/1000) ));
   publishDistance(function_of_the_distance, 1);
   delay(1000);
   int ROI_size = min(8, max(4, function_of_the_distance));
   ROI_width = ROI_size;
   ROI_height = ROI_size;
+  if (average_zone_0 <= save_calibration_result || average_zone_1 <= save_calibration_result)
+  {
+      // we can use the short mode, which allows more precise measurements up to 1.3 meters
+      distanceSensor.setIntermeasurementPeriod(20);
+      distanceSensor.setDistanceModeShort();
+      time_budget_in_ms = 20;
+      delay_between_measurements = 22;
+  }
+  delay(250);
+
+  // now we set the position of the center of the two zones
   if (advised_orientation_of_the_sensor){
     
     switch (ROI_size) {
@@ -168,16 +205,16 @@ void zones_calibration(){
           center[1] = 247;
           break;
         case 5:
-          center[0] = 159;
-          center[1] = 239;
+          center[0] = 150;
+          center[1] = 247;
           break;
         case 6:
           center[0] = 159;
           center[1] = 239;
           break;
         case 7:
-          center[0] = 167;
-          center[1] = 231;
+          center[0] = 159;
+          center[1] = 239;
           break;
         case 8:
           center[0] = 167;
@@ -188,8 +225,8 @@ void zones_calibration(){
   else{
     switch (ROI_size) {
         case 4:
-          center[0] = 193;
-          center[1] = 58;
+          center[0] = 195;
+          center[1] = 60;
            break;
         case 5:
           center[0] = 194;
@@ -200,12 +237,12 @@ void zones_calibration(){
           center[1] = 59;
           break;
         case 7:
-          center[0] = 195;
-          center[1] = 60;
+          center[0] = 193;
+          center[1] = 58;
           break;
         case 8:
-          center[0] = 195;
-          center[1] = 60;
+          center[0] = 193;
+          center[1] = 58;
           break;
       }
   }
@@ -222,8 +259,8 @@ void zones_calibration(){
   for (int i=0; i<number_attempts; i++){
       // increase sum of values in Zone 0
       distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-      delay(50);
-      distanceSensor.setTimingBudgetInMs(50);
+      delay(delay_between_measurements);
+      distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
       distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
       distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
       distanceSensor.stopRanging();      
@@ -234,8 +271,8 @@ void zones_calibration(){
 
       // increase sum of values in Zone 1
       distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-      delay(50);
-      distanceSensor.setTimingBudgetInMs(50);
+      delay(delay_between_measurements);
+      distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
       distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
       distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
       distanceSensor.stopRanging();      
@@ -295,7 +332,7 @@ void callback(char* topic, byte *payload, unsigned int length) {
     Serial.println();
     String newTopic = topic;
     payload[length] = '\0';
-    String newPayload = String((char *)payload);
+    String newPayload = String((char *)payload);    
     if (newTopic == mqtt_serial_receiver_ch) 
     {
       if (newPayload == "zones_calibration")
@@ -303,18 +340,18 @@ void callback(char* topic, byte *payload, unsigned int length) {
         zones_calibration();
       }
       if (newPayload == "update_raw_measurements")
+      {
+        if (update_raw_measurements)
         {
-          if (update_raw_measurements)
-          {
-            // it is true, then it is going to be changed to false
-            update_raw_measurements = false;
-          }
-          else
-          {
-            update_raw_measurements = true;
-          }
-          delay(200);
+          // it is true, then it is going to be changed to false
+          update_raw_measurements = false;
         }
+        else
+        {
+          update_raw_measurements = true;
+        }
+        delay(200);
+      }
     }
 }
 
@@ -374,10 +411,8 @@ void setup(void)
 
   if (distanceSensor.init() == false)
     Serial.println("Sensor online!");
-  distanceSensor.setIntermeasurementPeriod(50);
-  distanceSensor.setDistanceModeLong();
 
-  Serial.setTimeout(500);// Set time out for setup_wifi();
+  Serial.setTimeout(200);// Set time out for setup_wifi();
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
@@ -432,8 +467,8 @@ void loop(void)
   
   
   distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
-  delay(55);
-  distanceSensor.setTimingBudgetInMs(50);
+  delay(delay_between_measurements);
+  distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
   distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
   distanceSensor.stopRanging();
@@ -460,7 +495,7 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
     int AllZonesCurrentStatus = 0;
     int AnEventHasOccured = 0;
 
-  if (Distance < DIST_THRESHOLD_MAX[Zone] && Distance > MIN_DISTANCE[Zone]) {
+  if (Distance < DIST_THRESHOLD_MAX[Zone]) {
     // Someone is in !
     CurrentZoneStatus = SOMEONE;
   }
@@ -543,5 +578,3 @@ void processPeopleCountingData(int16_t Distance, uint8_t zone) {
     }
   }
 }
-
-
