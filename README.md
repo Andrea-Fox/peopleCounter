@@ -86,6 +86,7 @@ In the first few lines of the code in the main folder, there are a few parameter
 - `update_raw_measurements` (false)
 - `advised_orientation_of_the_sensor` (true)
 - `save_calibration_result` (true)
+- `short_distance_threshold` (1300)
 
 #### Name of the device
 It indicates the room in which the sensor is going to be positioned. It will simplt change the MQTT topics and will help when multiple sensors are placed around the house.
@@ -111,6 +112,8 @@ The arrow indicates the direction of the people passing under the sensor.
 If this value is true, then the results of the calibration of the zones are going to be stored in the EEPROM memory, hence if the ESP is turned off no data is going to be lost. If false, every time the sensor is turned on, a new calibraion is launched, however that is useless if the sensor is always in the same position.
 A recalibration can still be called using the MQTT command (see the integration with Home Assistant file)
 
+#### Short distance threshold
+When the distane measured in one of the zones is below this threshold (exoressed in millimeters) the sensor uses the short distance mode, which allows more frequent measurements and better performances. The VL53L1X sensor supports short distance mode only if the distance is below 1300 mm
 
 ### Additional information
 
