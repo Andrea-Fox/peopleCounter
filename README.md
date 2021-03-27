@@ -92,6 +92,8 @@ In the first few lines of the code in the main folder, there are a few parameter
 - `delay_between_measurements_short` (20)
 - `time_budget_in_ms_short` (20)
 
+Some parameters areavailable only in the ESP32 version. 
+
 #### Name of the device
 It indicates the room in which the sensor is going to be positioned. It will simplt change the MQTT topics and will help when multiple sensors are placed around the house.
 
