@@ -34,8 +34,18 @@ static bool advised_orientation_of_the_sensor = true;
 // this value has to be true if you don't need to compute the threshold every time the device is turned on
 static bool save_calibration_result = true;
 
+
+// parameters which define the time between two different measurements in longRange mode
+static int delay_between_measurements_long = 50;
+static int time_budget_in_ms_long = 50;
+
+// parameters which define the time between two different measurements in longRange mode
+static int time_budget_in_ms_short = 20;
+static int delay_between_measurements_short = 10;
+
 // value which defines the threshold which activates the short distance mode (the sensor supports it only up to a distance of 1300 mm)
 static int short_distance_threshold = 1300;
+
 
 //*******************************************************************************************************************
 // all the code from this point and onwards doesn't have to be touched in order to have everything working (hopefully)
@@ -71,7 +81,6 @@ static int RIGHT = 1;
 static int DIST_THRESHOLD_MAX[] = {0, 0};   // treshold of the two zones
 static int MIN_DISTANCE[] = {0, 0};
 
-
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
 static int LeftPreviousStatus = NOBODY;
@@ -84,9 +93,8 @@ static int PplCounter = 0;
 static int ROI_height = 0;
 static int ROI_width = 0;
 
-static int delay_between_measurements = 50;
-static int time_budget_in_ms = 50;
-
+static int delay_between_measurements = 0;
+static int time_budget_in_ms = 0;
 
 
 void zones_calibration_boot(){
@@ -105,16 +113,16 @@ void zones_calibration_boot(){
 
       // if the distance measured is small, then we can use the short range mode of the sensor
       if (min(DIST_THRESHOLD_MAX[0], DIST_THRESHOLD_MAX[1]) <= short_distance_threshold){
-        distanceSensor.setIntermeasurementPeriod(20);
+        distanceSensor.setIntermeasurementPeriod(time_budget_in_ms_short);
         distanceSensor.setDistanceModeShort();
-        time_budget_in_ms = 20;
-        delay_between_measurements = 22;
+        time_budget_in_ms = time_budget_in_ms_short;
+        delay_between_measurements = delay_between_measurements_short;
       }
       else {
-        distanceSensor.setIntermeasurementPeriod(50);
+        distanceSensor.setIntermeasurementPeriod(time_budget_in_ms_long);
         distanceSensor.setDistanceModeLong();
-        time_budget_in_ms = 50;
-        delay_between_measurements = 55;
+        time_budget_in_ms = time_budget_in_ms_long;
+        delay_between_measurements = delay_between_measurements_long;
       }
       publishDistance(center[0], 0);
       publishDistance(center[1], 0);
@@ -138,10 +146,10 @@ void zones_calibration(){
   // each measurements is done with a timing budget of 100 ms, to increase the precision
   client.publish(mqtt_serial_publish_distance_ch, "Computation of new threshold");
   // we set the standard values for the measurements
-  distanceSensor.setIntermeasurementPeriod(100);
+  distanceSensor.setIntermeasurementPeriod(time_budget_in_ms_long);
   distanceSensor.setDistanceModeLong();
-  time_budget_in_ms = 50;
-  delay_between_measurements = 50;
+  time_budget_in_ms = time_budget_in_ms_long;
+  delay_between_measurements = delay_between_measurements_long;
   center[0] = 167;
   center[1] = 231;
   ROI_height = 8;
@@ -188,13 +196,13 @@ void zones_calibration(){
   int ROI_size = min(8, max(4, function_of_the_distance));
   ROI_width = ROI_size;
   ROI_height = ROI_size;
-  if (average_zone_0 <= save_calibration_result || average_zone_1 <= save_calibration_result)
+  if (average_zone_0 <= short_distance_threshold  || average_zone_1 <= short_distance_threshold )
   {
       // we can use the short mode, which allows more precise measurements up to 1.3 meters
-      distanceSensor.setIntermeasurementPeriod(20);
+      distanceSensor.setIntermeasurementPeriod(time_budget_in_ms_short);
       distanceSensor.setDistanceModeShort();
-      time_budget_in_ms = 20;
-      delay_between_measurements = 22;
+      time_budget_in_ms = time_budget_in_ms_short;
+      delay_between_measurements = delay_between_measurements_short;
   }
   delay(250);
 
@@ -473,6 +481,7 @@ void loop(void)
   distanceSensor.setTimingBudgetInMs(time_budget_in_ms);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
   distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+  distanceSensor.clearInterrupt();
   distanceSensor.stopRanging();
 
   Serial.println(distance);
