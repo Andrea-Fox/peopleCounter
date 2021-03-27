@@ -87,6 +87,10 @@ In the first few lines of the code in the main folder, there are a few parameter
 - `advised_orientation_of_the_sensor` (true)
 - `save_calibration_result` (true)
 - `short_distance_threshold` (1300)
+- `delay_between_measurements_long` (50)
+- `time_budget_in_ms_long` (50)
+- `delay_between_measurements_short` (20)
+- `time_budget_in_ms_short` (20)
 
 #### Name of the device
 It indicates the room in which the sensor is going to be positioned. It will simplt change the MQTT topics and will help when multiple sensors are placed around the house.
@@ -114,6 +118,9 @@ A recalibration can still be called using the MQTT command (see the integration 
 
 #### Short distance threshold
 When the distane measured in one of the zones is below this threshold (exoressed in millimeters) the sensor uses the short distance mode, which allows more frequent measurements and better performances. The VL53L1X sensor supports short distance mode only if the distance is below 1300 mm
+
+#### Measurements time parameters
+These parameters set the time the sensor takes to do a measurements (in milliseconds) and the following delay between two different measurements. The user can define two different values: one for the longRange mode and one for the shortRange mode
 
 ### Additional information
 
