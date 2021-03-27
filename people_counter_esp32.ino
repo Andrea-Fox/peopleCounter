@@ -41,7 +41,7 @@ static int time_budget_in_ms_long = 50;
 
 // parameters which define the time between two different measurements in longRange mode
 static int time_budget_in_ms_short = 20;
-static int delay_between_measurements_short = 10;
+static int delay_between_measurements_short = 20;
 
 // value which defines the threshold which activates the short distance mode (the sensor supports it only up to a distance of 1300 mm)
 static int short_distance_threshold = 1300;
