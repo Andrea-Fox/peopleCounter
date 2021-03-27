@@ -123,8 +123,8 @@ Additional information about the parameters used in the code can be found in the
 ### How to invert the two zones
 If you observe that when you get in a room the number of people inside it decreases, while it increases when you get out it means that the values of the centers are inverted. to solve this issue, you can simply invert the values 1 and 2 in the automations which regulate the number of people in the `integration_with_home_assistant.md` file.
 
-### Direct sunlight pointing towards the sensor
-It has been observed by several user, such as myself, that when direct sunlight (or even glares on a very sunny day) points toward the sensor, the precision of the measurements is influenced and this can bring to several false detections, even one every few seconds. Unfortunately, at the moment, this issue cannot be solved via software.
+### Issues due to sunlight
+As stated in the datasheet from the creators of the sensor, the VL53L1X has (much) less accuracy when there is a lot of light. Unfortunately it is not possible to eliminate such issue
 
 
 
