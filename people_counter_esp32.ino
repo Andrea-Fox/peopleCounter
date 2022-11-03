@@ -329,7 +329,7 @@ void setup_wifi()
   {
     delay(500);
     Serial.print(".");
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid, password);     // as suggested by @LC7894 in #23, deleting this line might solve sime issues
   }
 }
 
